@@ -1,69 +1,116 @@
+import { HeroSearchBar } from "@/components/search/HeroSearchBar";
+import { ProjectSection } from "@/components/home/ProjectSection";
+import { CityTabsProjects } from "@/components/home/CityTabsProjects";
+import { WhyChooseHomebrix } from "@/components/home/WhyChooseHomebrix";
+import { BrowsePropertyType } from "@/components/home/BrowsePropertyType";
+import { BuilderStrip } from "@/components/home/BuilderStrip";
+import { CtaBanner } from "@/components/home/CtaBanner";
+import { HomeBlogSection } from "@/components/home/HomeBlogSection";
+import { SectionHeading } from "@/components/home/SectionHeading";
+import {
+  getNewLaunchProjects,
+  getReadyToMoveProjects,
+  getLaunchCitiesWithProjects,
+  getUnderConstructionProjectsByCity,
+} from "@/lib/db/queries";
+import { jsonLdScript, organizationSchema, websiteSchema } from "@/lib/seo/schema";
+import { ArrowUpRight, ShieldCheck, ArrowRight } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import "./home.css";
+import "./search-suggestions.css";
+import "./hero-polish.css";
+import "./hero-inline.css";
 
-export default function Home() {
+export default async function Home() {
+  const [newLaunch, readyToMove, cities] = await Promise.all([
+    getNewLaunchProjects(4),
+    getReadyToMoveProjects(4),
+    getLaunchCitiesWithProjects(5),
+  ]);
+
+  const underConstructionByCity = await Promise.all(
+    cities.map(async (city) => ({
+      citySlug: city.slug,
+      cityName: city.name,
+      projects: await getUnderConstructionProjectsByCity(city.slug, 6),
+    }))
+  );
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(websiteSchema())} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(organizationSchema())} />
+
+      <div className="premium-home">
+      <section className="home-hero">
+        <div className="hero-picture">
+          <Image src="/images/hero_bg_v3.png" alt="Sunlit contemporary penthouse with expansive city views" fill priority sizes="100vw" className="object-cover" />
+        </div>
+        <div className="hero-shade" />
+        <div className="hero-content">
+          <p className="home-eyebrow hero-markets"><span /> MUMBAI · NAVI MUMBAI · THANE</p>
+          <h1>Find your home.<br />
+          {/* <em>Build your next chapter.</em> */}
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+          <p className="hero-description">Trusted homes across Mumbai, Navi Mumbai and Thane.</p>
+          <div className="hero-inline-search"><HeroSearchBar /></div>
+          <a href="#discover" className="hero-explore">Find your next chapter <ArrowUpRight size={18} /></a>
+          <div className="hero-assurance"><ShieldCheck size={17} /> Verified projects <span /> Expert guidance <span /> Zero brokerage</div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+        <div className="hero-caption"><span>SPACES THAT INSPIRE</span><p>Extraordinary living.<br />Every single day.</p></div>
+      </section>
+      <div className="home-search mobile-search-only"><HeroSearchBar /></div>
+
+      {/* Featured Properties: New Launch Projects */}
+      <div id="discover" className="discovery-section"><ProjectSection
+        mobileCarousel
+        kicker="FRESH PERSPECTIVES"
+        title="New launches worth exploring"
+        subtitle="Explore the latest launches and find a space ahead of its time."
+        projects={newLaunch}
+        viewAllHref="/new-projects-in-mumbai"
+        viewAllLabel="View All Projects"
+      />
+
+      </div>
+      {/* Under Construction Projects Section */}
+      <section className="mx-auto max-w-7xl px-4 py-14">
+        <SectionHeading
+          kicker="BUILDING TOMORROW"
+          title="Homes taking shape"
+          subtitle="Track real-time construction progress across your favourite cities."
+        />
+        <CityTabsProjects data={underConstructionByCity} />
+      </section>
+
+      {/* Ready to Move Section */}
+      <ProjectSection
+        kicker="READY TO MOVE IN"
+        title="Ready to move. Ready for you."
+        subtitle="Discover ready-to-move homes and start imagining life from day one."
+        projects={readyToMove}
+        viewAllHref="/ready-to-move-in-mumbai"
+        viewAllLabel="View All Projects"
+      />
+
+      {/* Homebrix difference */}
+      <WhyChooseHomebrix />
+
+      {/* Builder Strip */}
+      <div className="home-alternate home-partners"><BuilderStrip /></div>
+
+      {/* Lifestyle collections */}
+      <BrowsePropertyType />
+
+      {/* Call to action footer banner */}
+      <section className="home-tools">
+        <div><p className="home-eyebrow">A LITTLE CLARITY GOES A LONG WAY</p><h2>Big decisions.<br /><em>Made a little easier.</em></h2></div>
+        <div className="tool-links">{[{title:"Plan your monthly EMI",desc:"Find a payment that fits your life.",href:"/emi-calculator"},{title:"Discover your buying power",desc:"Make room for the home you want.",href:"/affordability-calculator"},{title:"Compare your favourites",desc:"See what makes each home special.",href:"/compare"}].map(item=><Link href={item.href} key={item.href}><div><h3>{item.title}</h3><p>{item.desc}</p></div><ArrowRight size={20}/></Link>)}</div>
+      </section>
+      <HomeBlogSection />
+      <CtaBanner />
+      </div>
+    </>
   );
 }

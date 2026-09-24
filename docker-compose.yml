@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: propvista-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: propvista
+      POSTGRES_PASSWORD: propvista_dev
+      POSTGRES_DB: propvista
+    ports:
+      - "5433:5432"
+    volumes:
+      - propvista_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U propvista -d propvista"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: propvista-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
+    volumes:
+      - propvista_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  typesense:
+    image: typesense/typesense:27.1
+    container_name: propvista-typesense
+    restart: unless-stopped
+    environment:
+      TYPESENSE_API_KEY: propvista_dev_typesense_key
+      TYPESENSE_DATA_DIR: /data
+    ports:
+      - "8108:8108"
+    volumes:
+      - propvista_typesense_data:/data
+
+volumes:
+  propvista_postgres_data:
+  propvista_redis_data:
+  propvista_typesense_data:

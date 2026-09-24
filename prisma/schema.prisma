@@ -1,0 +1,828 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ═══════════════════════════════════════
+// GEOGRAPHIC HIERARCHY
+// ═══════════════════════════════════════
+
+model State {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(100)
+  slug      String   @unique @db.VarChar(100)
+  stampDuty Json?    @map("stamp_duty")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  cities City[]
+
+  @@map("states")
+}
+
+model City {
+  id        Int      @id @default(autoincrement())
+  stateId   Int      @map("state_id")
+  name      String   @db.VarChar(100)
+  slug      String   @unique @db.VarChar(100)
+  lat       Decimal? @db.Decimal(10, 8)
+  lng       Decimal? @db.Decimal(11, 8)
+  isActive  Boolean  @default(true) @map("is_active")
+  isMetro   Boolean  @default(false) @map("is_metro")
+  sortOrder Int      @default(0) @map("sort_order")
+
+  state       State        @relation(fields: [stateId], references: [id])
+  localities  Locality[]
+  regions     Region[]
+  projects    Project[]
+  priceTrends PriceTrend[]
+  places      Place[]
+
+  @@index([stateId])
+  @@map("cities")
+}
+
+/**
+ * A sub-city grouping of localities (e.g. "Western Mumbai", "Palm Beach" in
+ * Navi Mumbai, "Ghodbunder Extension" in Thane) — the middle tier between
+ * City and Locality, matching how buyers actually browse dense metros.
+ */
+model Region {
+  id        Int    @id @default(autoincrement())
+  cityId    Int    @map("city_id")
+  name      String @db.VarChar(150)
+  slug      String @db.VarChar(150)
+  sortOrder Int    @default(0) @map("sort_order")
+
+  city       City       @relation(fields: [cityId], references: [id])
+  localities Locality[]
+
+  @@unique([cityId, slug])
+  @@map("regions")
+}
+
+model Locality {
+  id           Int      @id @default(autoincrement())
+  cityId       Int      @map("city_id")
+  regionId     Int?     @map("region_id")
+  name         String   @db.VarChar(150)
+  slug         String   @db.VarChar(150)
+  lat          Decimal? @db.Decimal(10, 8)
+  lng          Decimal? @db.Decimal(11, 8)
+  avgPriceSqft Int?     @map("avg_price_sqft")
+  projectCount Int      @default(0) @map("project_count")
+  isPopular    Boolean  @default(false) @map("is_popular")
+
+  city        City         @relation(fields: [cityId], references: [id])
+  region      Region?      @relation(fields: [regionId], references: [id])
+  projects    Project[]
+  priceTrends PriceTrend[]
+  places      Place[]
+
+  @@unique([cityId, slug])
+  @@map("localities")
+}
+
+// ═══════════════════════════════════════
+// BUILDERS
+// ═══════════════════════════════════════
+
+model Builder {
+  id                String   @id @default(uuid())
+  name              String   @db.VarChar(200)
+  slug              String   @unique @db.VarChar(200)
+  logoUrl           String?  @map("logo_url")
+  coverUrl          String?  @map("cover_url")
+  establishedYear   Int?     @map("established_year")
+  headquarters      String?  @db.VarChar(200)
+  description       String?
+  reraIds           Json?    @map("rera_ids")
+  totalDelivered    Int      @default(0) @map("total_delivered")
+  underConstruction Int      @default(0) @map("under_construction")
+  deliveryRatePct   Decimal? @map("delivery_rate_pct") @db.Decimal(5, 2)
+  trustScore        Decimal? @map("trust_score") @db.Decimal(3, 2)
+  verified          Boolean  @default(false)
+  featured          Boolean  @default(false)
+  metaTitle         String?  @map("meta_title") @db.VarChar(160)
+  metaDesc          String?  @map("meta_desc") @db.VarChar(320)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  projects      Project[]
+  leads         Lead[]
+  reviews       Review[]
+  listingBoosts ListingBoost[]
+
+  @@map("builders")
+}
+
+// ═══════════════════════════════════════
+// PROJECTS (Core Table)
+// ═══════════════════════════════════════
+
+enum ConstructionStatus {
+  new_launch
+  under_construction
+  ready_to_move
+}
+
+enum ProjectStatus {
+  active
+  sold_out
+  on_hold
+  archived
+}
+
+model Project {
+  id         String   @id @default(uuid())
+  name       String   @db.VarChar(200)
+  slug       String   @db.VarChar(200)
+  builderId  String   @map("builder_id")
+  cityId     Int      @map("city_id")
+  localityId Int?     @map("locality_id")
+  lat        Decimal? @db.Decimal(10, 8)
+  lng        Decimal? @db.Decimal(11, 8)
+  address    String?
+
+  // RERA
+  reraNumber     String?   @map("rera_number") @db.VarChar(100)
+  reraState      String?   @map("rera_state") @db.VarChar(50)
+  reraVerified   Boolean   @default(false) @map("rera_verified")
+  reraVerifiedAt DateTime? @map("rera_verified_at")
+
+  // Pricing
+  priceMin        BigInt? @map("price_min")
+  priceMax        BigInt? @map("price_max")
+  pricePerSqftMin Int?    @map("price_per_sqft_min")
+  pricePerSqftMax Int?    @map("price_per_sqft_max")
+  areaMinSqft     Int?    @map("area_min_sqft")
+  areaMaxSqft     Int?    @map("area_max_sqft")
+
+  // Project info
+  totalUnits      Int?      @map("total_units")
+  totalTowers     Int?      @map("total_towers")
+  totalFloors     Int?      @map("total_floors")
+  launchDate      DateTime? @map("launch_date") @db.Date
+  possessionDate  DateTime? @map("possession_date") @db.Date
+  constructionPct Int       @default(0) @map("construction_pct")
+
+  // Status
+  constructionStatus ConstructionStatus @map("construction_status")
+  launchStage        LaunchStage?       @map("launch_stage")  // fine-grained stage within constructionStatus
+  projectStatus      ProjectStatus      @default(active) @map("project_status")
+
+  // Content
+  description  String?
+  highlights   String[]
+  amenities    Json?
+  paymentPlans Json?    @map("payment_plans")
+
+  // SEO
+  metaTitle  String? @map("meta_title") @db.VarChar(160)
+  metaDesc   String? @map("meta_desc") @db.VarChar(320)
+  ogImageUrl String? @map("og_image_url")
+
+  // CMS flags
+  published      Boolean @default(false)
+  featured       Boolean @default(false)
+  newLaunchBadge Boolean @default(false) @map("new_launch_badge")
+  hotDealBadge   Boolean @default(false) @map("hot_deal_badge")
+  reraBadge      Boolean @default(false) @map("rera_badge")
+
+  // Denormalized for fast filter queries — auto-synced from ProjectConfig rows
+  // e.g. a project with 2BHK and 3BHK configs has bhkTypes = [2, 3]
+  bhkTypes       Int[]   @map("bhk_types")
+
+  // Analytics
+  viewCount      Int @default(0) @map("view_count")
+  leadCount      Int @default(0) @map("lead_count")
+  shortlistCount Int @default(0) @map("shortlist_count")
+
+  // Meta
+  createdBy   String?   @map("created_by")
+  publishedAt DateTime? @map("published_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  builder             Builder              @relation(fields: [builderId], references: [id])
+  city                City                 @relation(fields: [cityId], references: [id])
+  locality            Locality?            @relation(fields: [localityId], references: [id])
+  configs             ProjectConfig[]
+  constructionUpdates ConstructionUpdate[]
+  media               Media[]
+  leads               Lead[]
+  savedProjects       SavedProject[]
+  reviews             Review[]
+  listingBoosts       ListingBoost[]
+  faqs                ProjectFaq[]
+  landmarks           ProjectLandmark[]
+
+  @@unique([cityId, slug])
+  @@index([cityId])
+  @@index([localityId])
+  @@index([constructionStatus, projectStatus])
+  @@index([priceMin, priceMax])
+  @@index([possessionDate])
+  @@index([published, featured])
+  @@map("projects")
+}
+
+// ═══════════════════════════════════════
+// PROJECT FAQs (CMS-authored, per project)
+// ═══════════════════════════════════════
+
+model ProjectFaq {
+  id           String @id @default(uuid())
+  projectId    String @map("project_id")
+  question     String
+  answer       String
+  displayOrder Int    @default(0) @map("display_order")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_faqs")
+}
+
+// ═══════════════════════════════════════
+// NEARBY LANDMARKS (Neighbourhood section)
+// ═══════════════════════════════════════
+
+enum LandmarkCategory {
+  // Transport
+  railway_station
+  metro_station
+  bus_stop
+  bus_depot
+  highway
+  airport
+  expressway
+  // Education
+  school
+  college_university
+  university
+  coaching
+  // Health
+  hospital
+  clinic
+  pharmacy
+  // Shopping
+  mall
+  market
+  supermarket
+  wholesale_market
+  // Lifestyle
+  restaurant
+  hotel
+  cinema
+  resort
+  // Work
+  it_park
+  sez
+  business_park
+  office_hub
+  // Public
+  park
+  garden
+  sports_complex
+  stadium
+  // Religious
+  temple
+  mosque
+  church
+  gurudwara
+  // Finance
+  bank
+  // Location
+  locality
+  colony
+  sector
+  nagar
+  other
+}
+
+enum LaunchStage {
+  pre_launch
+  newly_launched
+  under_construction
+  nearing_possession
+  possession_started
+  completed
+}
+
+enum TravelMode {
+  walk
+  drive
+  auto
+  train
+  metro
+  bus
+}
+
+enum PlaceSource {
+  builder
+  rera
+  manual
+  osm
+}
+
+// ═══════════════════════════════════════
+// PLACES — Master POI / Landmark Database
+// ═══════════════════════════════════════
+
+model Place {
+  id             String           @id @default(uuid())
+  name           String           @db.VarChar(255)
+  slug           String           @unique @db.VarChar(255)    // "jupiter-hospital"
+  seoSlug        String           @unique @db.VarChar(300) @map("seo_slug")  // "jupiter-hospital-thane"
+  category       LandmarkCategory
+  cityId         Int?             @map("city_id")
+  localityId     Int?             @map("locality_id")
+  lat            Decimal?         @db.Decimal(10, 8)
+  lng            Decimal?         @db.Decimal(11, 8)
+  address        String?
+  photoUrl       String?          @map("photo_url")
+  rating         Decimal?         @db.Decimal(3, 1)
+  reviewCount    Int?             @map("review_count")
+  importanceScore Int             @default(50) @map("importance_score")  // 0-100, you set manually
+  createSeoPage  Boolean          @default(false) @map("create_seo_page") // enable SEO page generation
+  seoPriority    Int              @default(0) @map("seo_priority")        // 1=high 2=medium 3=low
+  source         PlaceSource      @default(manual)
+  verified       Boolean          @default(false)
+  isActive       Boolean          @default(true) @map("is_active")
+  createdAt      DateTime         @default(now()) @map("created_at")
+
+  city           City?            @relation(fields: [cityId], references: [id])
+  locality       Locality?        @relation(fields: [localityId], references: [id])
+  landmarks      ProjectLandmark[]
+
+  @@index([category])
+  @@index([cityId])
+  @@map("places")
+}
+
+model ProjectLandmark {
+  id             String           @id @default(uuid())
+  projectId      String           @map("project_id")
+  placeId        String?          @map("place_id")       // link to Place master (if matched)
+
+  // Raw data — always stored even if no placeId
+  name           String           @db.VarChar(200)
+  category       LandmarkCategory
+
+  // Distance
+  distanceM      Int?             @map("distance_m")     // in meters (for engine)
+  distanceLabel  String?          @db.VarChar(30) @map("distance_label") // "800m" or "10 min drive"
+  travelMinutes  Int?             @map("travel_minutes")
+  travelMode     TravelMode       @default(drive) @map("travel_mode")
+
+  // Geo (optional, inherited from Place if linked)
+  lat            Decimal?         @db.Decimal(10, 8)
+  lng            Decimal?         @db.Decimal(11, 8)
+
+  // Display
+  displayOrder   Int              @default(0) @map("display_order")
+  showOnMap      Boolean          @default(true) @map("show_on_map")
+  isFeatured     Boolean          @default(false) @map("is_featured")  // top highlight
+  source         PlaceSource      @default(manual)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  place   Place?  @relation(fields: [placeId], references: [id])
+
+  @@index([projectId])
+  @@index([placeId])
+  @@map("project_landmarks")
+}
+
+// ═══════════════════════════════════════
+// PROJECT CONFIGURATIONS (BHK Options)
+// ═══════════════════════════════════════
+
+model ProjectConfig {
+  id             String  @id @default(uuid())
+  projectId      String  @map("project_id")
+  bhk            Int
+  bedrooms       Int?
+  bathrooms      Int?
+  areaCarpetMin  Int?    @map("area_carpet_min")
+  areaCarpetMax  Int?    @map("area_carpet_max")
+  areaBuiltupMin Int?    @map("area_builtup_min")
+  areaBuiltupMax Int?    @map("area_builtup_max")
+  priceMin       BigInt? @map("price_min")
+  priceMax       BigInt? @map("price_max")
+  floorPlanUrl   String? @map("floor_plan_url")
+  isAvailable    Boolean @default(true) @map("is_available")
+  displayOrder   Int     @default(0) @map("display_order")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_configs")
+}
+
+// ═══════════════════════════════════════
+// CONSTRUCTION UPDATES (Timeline)
+// ═══════════════════════════════════════
+
+model ConstructionUpdate {
+  id            String   @id @default(uuid())
+  projectId     String   @map("project_id")
+  updateDate    DateTime @map("update_date") @db.Date
+  title         String?  @db.VarChar(200)
+  description   String?
+  completionPct Int?     @map("completion_pct")
+  createdBy     String?  @map("created_by")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("construction_updates")
+}
+
+// ═══════════════════════════════════════
+// MEDIA
+// ═══════════════════════════════════════
+
+enum MediaType {
+  photo
+  video
+  floor_plan
+  brochure
+  site_plan
+  construction_photo
+  document
+}
+
+model Media {
+  id           String    @id @default(uuid())
+  projectId    String    @map("project_id")
+  url          String
+  thumbUrl     String?   @map("thumb_url")
+  mediaType    MediaType @map("media_type")
+  caption      String?   @db.VarChar(300)
+  roomTag      String?   @map("room_tag") @db.VarChar(50)
+  isPrimary    Boolean   @default(false) @map("is_primary")
+  displayOrder Int       @default(0) @map("display_order")
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("media")
+}
+
+// ═══════════════════════════════════════
+// LEADS (Core Revenue Table)
+// ═══════════════════════════════════════
+
+enum LeadType {
+  contact_form
+  brochure
+  site_visit
+  callback
+  chatbot
+  whatsapp
+  call
+}
+
+enum LeadSource {
+  organic
+  paid
+  chatbot
+  whatsapp
+  referral
+  direct
+  social
+}
+
+enum LeadStatus {
+  new
+  assigned
+  contacted
+  interested
+  visit_scheduled
+  visited
+  negotiating
+  converted
+  lost
+  invalid
+  duplicate
+}
+
+model Lead {
+  id        String  @id @default(uuid())
+  projectId String? @map("project_id")
+  builderId String? @map("builder_id")
+
+  name  String? @db.VarChar(150)
+  phone String  @db.VarChar(20)
+  email String? @db.VarChar(255)
+
+  message     String?
+  budgetMin   BigInt? @map("budget_min")
+  budgetMax   BigInt? @map("budget_max")
+  bhkInterest Int[]   @map("bhk_interest")
+  timeline    String? @db.VarChar(50)
+
+  leadType LeadType   @map("lead_type")
+  source   LeadSource
+
+  utmSource   String? @map("utm_source") @db.VarChar(100)
+  utmMedium   String? @map("utm_medium") @db.VarChar(100)
+  utmCampaign String? @map("utm_campaign") @db.VarChar(100)
+  utmContent  String? @map("utm_content") @db.VarChar(100)
+  pageUrl     String? @map("page_url")
+
+  status      LeadStatus @default(new)
+  assignedTo  String?    @map("assigned_to")
+  notes       String?
+  followUpAt  DateTime?  @map("follow_up_at")
+  convertedAt DateTime?  @map("converted_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project? @relation(fields: [projectId], references: [id])
+  builder Builder? @relation(fields: [builderId], references: [id])
+
+  @@index([projectId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([phone])
+  @@map("leads")
+}
+
+// ═══════════════════════════════════════
+// USERS
+// ═══════════════════════════════════════
+
+enum UserRole {
+  buyer
+  cms_editor
+  cms_admin
+  super_admin
+}
+
+model User {
+  id         String    @id
+  name       String?   @db.VarChar(150)
+  email      String?   @unique @db.VarChar(255)
+  phone      String?   @db.VarChar(20)
+  role       UserRole  @default(buyer)
+  avatarUrl  String?   @map("avatar_url")
+  verified   Boolean   @default(false)
+  createdAt  DateTime  @default(now()) @map("created_at")
+  lastSeenAt DateTime? @map("last_seen_at")
+
+  savedProjects   SavedProject[]
+  savedSearches   SavedSearch[]
+  reviews         Review[]
+  blogPosts       BlogPost[]
+  chatbotSessions ChatbotSession[]
+
+  @@map("users")
+}
+
+// ═══════════════════════════════════════
+// SAVED PROJECTS (Shortlist)
+// ═══════════════════════════════════════
+
+model SavedProject {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  projectId String   @map("project_id")
+  notes     String?
+  visited   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, projectId])
+  @@map("saved_projects")
+}
+
+// ═══════════════════════════════════════
+// SAVED SEARCHES (Alerts)
+// ═══════════════════════════════════════
+
+enum AlertFrequency {
+  instant
+  daily
+  weekly
+  off
+}
+
+model SavedSearch {
+  id             String         @id @default(uuid())
+  userId         String         @map("user_id")
+  name           String?        @db.VarChar(200)
+  filters        Json
+  alertFrequency AlertFrequency @default(daily) @map("alert_frequency")
+  alertChannels  String[]       @map("alert_channels")
+  lastNotifiedAt DateTime?      @map("last_notified_at")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_searches")
+}
+
+// ═══════════════════════════════════════
+// REVIEWS
+// ═══════════════════════════════════════
+
+model Review {
+  id              String   @id @default(uuid())
+  projectId       String?  @map("project_id")
+  builderId       String?  @map("builder_id")
+  userId          String?  @map("user_id")
+  ratingOverall   Decimal  @map("rating_overall") @db.Decimal(2, 1)
+  ratingLocation  Decimal? @map("rating_location") @db.Decimal(2, 1)
+  ratingAmenities Decimal? @map("rating_amenities") @db.Decimal(2, 1)
+  ratingValue     Decimal? @map("rating_value") @db.Decimal(2, 1)
+  ratingBuilder   Decimal? @map("rating_builder") @db.Decimal(2, 1)
+  title           String?  @db.VarChar(200)
+  body            String?
+  verifiedBuyer   Boolean  @default(false) @map("verified_buyer")
+  helpfulCount    Int      @default(0) @map("helpful_count")
+  published       Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  project Project? @relation(fields: [projectId], references: [id])
+  builder Builder? @relation(fields: [builderId], references: [id])
+  user    User?    @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}
+
+// ═══════════════════════════════════════
+// BLOG
+// ═══════════════════════════════════════
+
+enum BlogStatus {
+  draft
+  published
+  archived
+}
+
+model BlogPost {
+  id           String     @id @default(uuid())
+  title        String     @db.VarChar(300)
+  slug         String     @unique @db.VarChar(300)
+  category     String?    @db.VarChar(100)
+  content      Json
+  excerpt      String?
+  thumbnailUrl String?    @map("thumbnail_url")
+  authorId     String?    @map("author_id")
+  status       BlogStatus @default(draft)
+  publishedAt  DateTime?  @map("published_at")
+  metaTitle    String?    @map("meta_title") @db.VarChar(160)
+  metaDesc     String?    @map("meta_desc") @db.VarChar(320)
+  ogImageUrl   String?    @map("og_image_url")
+  tags         String[]
+  viewCount    Int        @default(0) @map("view_count")
+  readingTime  Int?       @map("reading_time")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  author User? @relation(fields: [authorId], references: [id])
+
+  @@map("blog_posts")
+}
+
+// ═══════════════════════════════════════
+// PRICE TRENDS
+// ═══════════════════════════════════════
+
+model PriceTrend {
+  id           Int      @id @default(autoincrement())
+  cityId       Int?     @map("city_id")
+  localityId   Int?     @map("locality_id")
+  periodStart  DateTime @map("period_start") @db.Date
+  periodEnd    DateTime @map("period_end") @db.Date
+  avgPriceSqft Int?     @map("avg_price_sqft")
+  medianPrice  BigInt?  @map("median_price")
+  projectCount Int?     @map("project_count")
+  yoyChangePct Decimal? @map("yoy_change_pct") @db.Decimal(5, 2)
+  qoqChangePct Decimal? @map("qoq_change_pct") @db.Decimal(5, 2)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  city     City?     @relation(fields: [cityId], references: [id])
+  locality Locality? @relation(fields: [localityId], references: [id])
+
+  @@map("price_trends")
+}
+
+// ═══════════════════════════════════════
+// CHATBOT SESSIONS
+// ═══════════════════════════════════════
+
+model ChatbotSession {
+  id            String   @id @default(uuid())
+  sessionId     String   @unique @map("session_id") @db.VarChar(100)
+  userId        String?  @map("user_id")
+  messages      Json     @default("[]")
+  intent        String?  @db.VarChar(50)
+  collectedData Json     @default("{}") @map("collected_data")
+  leadCaptured  Boolean  @default(false) @map("lead_captured")
+  leadId        String?  @map("lead_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("chatbot_sessions")
+}
+
+// ═══════════════════════════════════════
+// BOOST / FEATURED PAYMENTS
+// ═══════════════════════════════════════
+
+enum BoostPlan {
+  featured
+  premium
+  spotlight
+}
+
+enum BoostStatus {
+  pending
+  active
+  expired
+  failed
+}
+
+model ListingBoost {
+  id                String      @id @default(uuid())
+  projectId         String?     @map("project_id")
+  builderId         String?     @map("builder_id")
+  plan              BoostPlan
+  amount            Int
+  razorpayOrderId   String?     @map("razorpay_order_id") @db.VarChar(100)
+  razorpayPaymentId String?     @map("razorpay_payment_id") @db.VarChar(100)
+  status            BoostStatus
+  startsAt          DateTime?   @map("starts_at")
+  expiresAt         DateTime?   @map("expires_at")
+  createdAt         DateTime    @default(now()) @map("created_at")
+
+  project Project? @relation(fields: [projectId], references: [id])
+  builder Builder? @relation(fields: [builderId], references: [id])
+
+  @@map("listing_boosts")
+}
+
+// ═══════════════════════════════════════
+// CAREERS
+// ═══════════════════════════════════════
+
+enum JobStatus {
+  draft
+  open
+  closed
+}
+
+model Job {
+  id           String    @id @default(uuid())
+  slug         String    @unique @db.VarChar(150)
+  title        String    @db.VarChar(200)
+  department   String    @db.VarChar(100)
+  location     String    @db.VarChar(150)
+  type         String    @db.VarChar(50)
+  description  String
+  requirements String[]
+  status       JobStatus @default(open)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  @@index([status])
+  @@map("jobs")
+}
+
+enum JobApplicationStatus {
+  new
+  reviewing
+  shortlisted
+  rejected
+  hired
+}
+
+model JobApplication {
+  id          String               @id @default(uuid())
+  jobSlug     String               @map("job_slug") @db.VarChar(100)
+  jobTitle    String               @map("job_title") @db.VarChar(200)
+  name        String               @db.VarChar(150)
+  email       String               @db.VarChar(255)
+  phone       String               @db.VarChar(20)
+  resumeUrl   String               @map("resume_url")
+  coverLetter String?              @map("cover_letter")
+  status      JobApplicationStatus @default(new)
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@map("job_applications")
+}

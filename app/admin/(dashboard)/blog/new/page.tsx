@@ -1,0 +1,11 @@
+import { BlogPostForm } from "@/components/admin/BlogPostForm";
+import { createBlogPostAction } from "../actions";
+
+export default function NewBlogPostPage() {
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Add Blog Post</h1>
+      <BlogPostForm action={createBlogPostAction} />
+    </div>
+  );
+}
