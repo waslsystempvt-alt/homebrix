@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(process.env.DOCKER_BUILD ? { output: "standalone" as const } : {}),
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "res.cloudinary.com" },
