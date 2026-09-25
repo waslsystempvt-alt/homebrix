@@ -45,7 +45,7 @@ export default async function Home() {
       <div className="premium-home">
       <section className="home-hero">
         <div className="hero-picture">
-          <Image src="/images/hero_bg_v3.png" alt="Sunlit contemporary penthouse with expansive city views" fill priority sizes="100vw" className="object-cover" />
+          <Image src="/images/hero_bg_v4.png" alt="Luxury apartment living room and balcony overlooking the Mumbai skyline at dusk" fill priority sizes="100vw" className="object-cover" />
         </div>
         <div className="hero-shade" />
         <div className="hero-content">
