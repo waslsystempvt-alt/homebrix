@@ -45,3 +45,6 @@ next-env.d.ts
 
 # user-uploaded files (resumes, blog images)
 /public/uploads/
+
+# Local Netlify folder
+.netlify

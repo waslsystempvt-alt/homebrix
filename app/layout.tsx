@@ -29,6 +29,8 @@ export const metadata: Metadata = {
     "Find verified under-construction and new launch builder projects across India. RERA verified, zero brokerage, AI-powered search.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
