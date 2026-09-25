@@ -14,4 +14,4 @@
 /* Keep the compact search card balanced across the banner edge. */
 .home-search{margin-top:-48px;margin-bottom:-8px}
 @media(max-width:767px){.home-search{width:100%;margin: -30px auto -10px;padding-inline:14px}.home-search>div:first-child{margin-inline:auto}}
-@media(max-width:767px){.discovery-section .mb-9{display:block;margin-bottom:26px}.discovery-section .mb-9>div>p.mt-2\.5{display:block;max-width:280px;margin-top:9px;font-size:12px;line-height:1.6}.discovery-section .mb-9>a{display:inline-flex;margin-top:18px;padding-bottom:7px;font-size:13px;font-weight:600}.discovery-section .mb-9 h2{max-width:330px;font-size:34px;line-height:1.12}}
+@media(max-width:767px){.discovery-section .mb-9{display:block;margin-bottom:26px}.discovery-section .mb-9>div>p.mt-2\.5{display:block;max-width:280px;margin-top:9px;font-size:12px;line-height:1.6}.discovery-section .mb-9>a{display:inline-flex;margin-top:18px;padding-bottom:7px;font-size:13px;font-weight:600}.discovery-section .mb-9 h2{max-width:330px;font-size:28px;line-height:1.2}}

@@ -36,7 +36,7 @@ export function SectionHeading({
             {kicker}
           </p>
         )}
-        <h2 className="text-[1.75rem] font-semibold leading-[1.2] tracking-tight sm:text-3xl">
+        <h2 className="text-[28px] font-semibold leading-[1.2] tracking-tight">
           {title.split(" ").map((word, index, words) => (
             <span key={`${word}-${index}`} className={index === words.length - 1 ? "text-primary" : ""}>
               {index > 0 ? " " : ""}{word}
