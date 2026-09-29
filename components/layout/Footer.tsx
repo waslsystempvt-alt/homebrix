@@ -40,7 +40,7 @@ function FooterHeading({ children }: { children: React.ReactNode }) {
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <Link href={href} className="transition-colors hover:text-[#ff474c]">
+    <Link href={href} className="transition-colors hover:text-primary">
       {children}
     </Link>
   );
@@ -50,15 +50,15 @@ export async function Footer() {
   const cities = await getFooterLocalities();
 
   return (
-    <footer id="all-cities" className="scroll-mt-20 bg-[#30282c] text-sm text-slate-400">
+    <footer id="all-cities" className="scroll-mt-20 bg-slate-950 text-sm text-slate-400">
       <div className="mx-auto max-w-7xl px-4 py-14">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-5">
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight text-white">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-[#ff474c] text-white">
+              <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                 <Building2 className="size-4.5" strokeWidth={2.5} />
               </span>
-              <span>Home<span className="text-[#ff474c]">brix</span></span>
+              <span>Home<span className="text-primary">brix</span></span>
             </Link>
             <p className="mt-3 max-w-xs text-slate-400">
               India&apos;s fastest new builder projects portal — verified under-construction and new-launch homes
@@ -74,7 +74,7 @@ export async function Footer() {
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="flex size-9 items-center justify-center rounded-full border border-slate-700 text-slate-400 transition-colors hover:border-[#ff474c] hover:text-[#ff474c]"
+                  className="flex size-9 items-center justify-center rounded-full border border-slate-700 text-slate-400 transition-colors hover:border-primary hover:text-primary"
                 >
                   <social.icon className="size-4" />
                 </a>
@@ -183,7 +183,7 @@ export async function Footer() {
 
       <div className="border-t border-slate-800">
         <div className="mx-auto max-w-7xl px-4 py-6 text-xs leading-relaxed text-slate-500">
-          <span>Home<span className="text-[#ff474c]">brix</span></span> is a technology platform that lists builder projects and does not act as a broker or agent.
+          <span>Home<span className="text-primary">brix</span></span> is a technology platform that lists builder projects and does not act as a broker or agent.
           RERA registration numbers and project approvals are as declared by the respective builders and are
           available on each project page — buyers are advised to independently verify all details before making
           a purchase decision.
@@ -194,12 +194,12 @@ export async function Footer() {
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 py-6 text-xs text-slate-500 md:flex-row">
           <p>© {new Date().getFullYear()} Homebrix. All rights reserved.</p>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-            <Link href="/about-us" className="hover:text-[#ff474c]">About</Link>
-            <Link href="/career" className="hover:text-[#ff474c]">Careers</Link>
-            <Link href="/contact-us" className="hover:text-[#ff474c]">Contact</Link>
-            <Link href="/privacy-policy" className="hover:text-[#ff474c]">Privacy</Link>
-            <Link href="/terms-of-service" className="hover:text-[#ff474c]">Terms</Link>
-            <Link href="/sitemap" className="hover:text-[#ff474c]">Sitemap</Link>
+            <Link href="/about-us" className="hover:text-primary">About</Link>
+            <Link href="/career" className="hover:text-primary">Careers</Link>
+            <Link href="/contact-us" className="hover:text-primary">Contact</Link>
+            <Link href="/privacy-policy" className="hover:text-primary">Privacy</Link>
+            <Link href="/terms-of-service" className="hover:text-primary">Terms</Link>
+            <Link href="/sitemap" className="hover:text-primary">Sitemap</Link>
           </div>
         </div>
       </div>

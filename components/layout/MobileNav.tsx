@@ -24,7 +24,7 @@ export function MobileNav({ links }: { links: { label: string; href: string }[] 
           <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Building2 className="size-4.5" strokeWidth={2.5} />
           </span>
-          <span>Home<span className="text-[#ff474c]">brix</span></span>
+          <span>Home<span className="text-primary">brix</span></span>
         </div>
 
         <nav className="flex flex-col px-2 py-3">

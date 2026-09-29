@@ -136,7 +136,7 @@ export function HeroSearchBar() {
                   className={cn(
                     "rounded-md px-3 py-1.5 text-[11px] font-medium transition-all shrink-0",
                     isActive
-                      ? "bg-[#ff474c] text-white shadow-none"
+                      ? "bg-primary text-primary-foreground shadow-none"
                       : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/80"
                   )}
                 >
@@ -149,9 +149,9 @@ export function HeroSearchBar() {
             type="button"
             aria-expanded={showMoreFilters}
             onClick={() => setShowMoreFilters((v) => !v)}
-            className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-slate-500 hover:text-[#ff474c] transition-colors"
+            className="inline-flex items-center gap-1.5 px-2 py-1 text-[11px] font-medium text-slate-500 hover:text-primary transition-colors"
           >
-            <SlidersHorizontal className="size-3.5 text-[#ff474c]" />
+            <SlidersHorizontal className="size-3.5 text-primary" />
             <span>{showMoreFilters ? "Hide filters" : "Filters"}</span>
           </button>
         </div>
@@ -159,8 +159,8 @@ export function HeroSearchBar() {
         {/* Compact search row */}
         <div className="flex items-center gap-2">
           {/* City / Location Input */}
-          <div className="relative flex min-w-0 flex-1 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 focus-within:border-[#ff474c] focus-within:ring-2 focus-within:ring-[#ff474c]/10">
-            <Search className="size-4 text-[#ff474c] shrink-0 mr-2.5" />
+          <div className="relative flex min-w-0 flex-1 items-center rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/10">
+            <Search className="size-4 text-primary shrink-0 mr-2.5" />
             <div className="flex-1 min-w-0">
               <input
                 type="text"
@@ -238,7 +238,7 @@ export function HeroSearchBar() {
               type="button"
               disabled={loading}
               onClick={handleFilterSearch}
-              className="h-11 rounded-xl bg-[#ff474c] px-4 text-xs font-medium text-white shadow-none hover:bg-[#ed343a]"
+              className="h-11 rounded-xl bg-primary px-4 text-xs font-medium text-primary-foreground shadow-none hover:bg-primary/90"
             >
               <Search className="size-4 shrink-0" />
               <span>{loading ? "Searching…" : "Find a home"}</span>
