@@ -61,29 +61,29 @@
 }
 
 :root {
-  /* Cool slate neutrals + deep emerald brand green — professional real-estate
-     portal palette (Bayut-style) instead of the default grayscale scaffold.
+  /* Cool slate neutrals + modern teal brand — professional real-estate portal
+     palette instead of the default grayscale scaffold.
      Every neutral (background/muted/border) shares the same hue so nothing
      reads as off-color; background sits a few % darker than card so white
      cards/sections lift off the page instead of blending into it. */
-  --background: #fdf9f7;
-  --foreground: #352e32;
+  --background: #f7fafb;
+  --foreground: #172a36;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.21 0.025 255);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.21 0.025 255);
-  --primary: #ff474c;
+  --primary: #0f766e;
   --primary-foreground: #ffffff;
-  --secondary: #fbece8;
-  --secondary-foreground: #813e43;
+  --secondary: #e6f4f2;
+  --secondary-foreground: #115e59;
   --muted: oklch(0.951 0.009 250);
   --muted-foreground: oklch(0.47 0.022 255);
-  --accent: #fbece8;
-  --accent-foreground: #813e43;
+  --accent: #e6f4f2;
+  --accent-foreground: #115e59;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.905 0.011 255);
   --input: oklch(0.905 0.011 255);
-  --ring: #ff474c;
+  --ring: #0f766e;
   --success: oklch(0.48 0.14 155);
   --success-foreground: oklch(0.99 0 0);
   --warning: oklch(0.76 0.15 70);
@@ -178,8 +178,8 @@
   }
 }
 /* Keep lead actions consistent across solid and formerly outlined placements. */
-[data-lead-cta] { background-color: #ff474c !important; color: #fff !important; font-weight: 700 !important; }
-[data-lead-cta]:hover { background-color: #ed343a !important; color: #fff !important; }
+[data-lead-cta] { background-color: #0f766e !important; color: #fff !important; font-weight: 700 !important; }
+[data-lead-cta]:hover { background-color: #0b5f5a !important; color: #fff !important; }
 [data-lead-cta] :is(svg, span) { color: inherit !important; }
 
 /* Medium-weight labels for primary actions and WhatsApp links. */

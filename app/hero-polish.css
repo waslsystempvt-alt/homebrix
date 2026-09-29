@@ -10,7 +10,7 @@
 }
 .discovery-section .mb-9 h2{color:#252529}
 .mobile-project-view-all{display:none}
-@media(max-width:767px){.section-heading-view-all{display:none!important}.mobile-project-view-all{display:flex;align-items:center;justify-content:center;gap:9px;width:max-content;margin:15px auto 0;border-bottom:1px solid #ff474c;padding-bottom:7px;color:#ff474c;font-size:13px;font-weight:600}}
+@media(max-width:767px){.section-heading-view-all{display:none!important}.mobile-project-view-all{display:flex;align-items:center;justify-content:center;gap:9px;width:max-content;margin:15px auto 0;border-bottom:1px solid #0f766e;padding-bottom:7px;color:#0f766e;font-size:13px;font-weight:600}}
 /* Keep the compact search card balanced across the banner edge. */
 .home-search{margin-top:-48px;margin-bottom:-8px}
 @media(max-width:767px){.home-search{width:100%;margin: -30px auto -10px;padding-inline:14px}.home-search>div:first-child{margin-inline:auto}}

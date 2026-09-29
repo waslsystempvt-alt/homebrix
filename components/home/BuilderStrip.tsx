@@ -15,13 +15,13 @@ export async function BuilderStrip() {
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
         {builders.map((builder) => (
           <Link key={builder.id} href={`/builder/${builder.slug}`}>
-            <Card className="flex flex-col items-center justify-center p-4 text-center rounded-2xl border border-slate-200/80 bg-white shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-[#ff474c]/30 hover:shadow-lg">
-              <div className="flex size-11 items-center justify-center rounded-full bg-rose-50 text-xs font-bold text-[#ff474c] border border-rose-100 mb-2">
+            <Card className="flex flex-col items-center justify-center p-4 text-center rounded-2xl border border-slate-200/80 bg-white shadow-2xs transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-lg">
+              <div className="flex size-11 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary border border-primary/15 mb-2">
                 {getInitials(builder.name)}
               </div>
               <p className="flex items-center justify-center gap-1 text-xs font-bold text-slate-900 line-clamp-1">
                 {builder.name}
-                {builder.verified && <BadgeCheck className="size-3.5 shrink-0 text-[#ff474c]" />}
+                {builder.verified && <BadgeCheck className="size-3.5 shrink-0 text-primary" />}
               </p>
               <p className="text-[11px] font-medium text-slate-500 mt-0.5">{builder._count.projects} projects</p>
             </Card>
